@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Eigen">
+      <UniqueIdentifier>{926bb9d4-f79d-4898-9844-86910e8141f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Eigen\src">
+      <UniqueIdentifier>{6505834f-56b7-45e5-a173-96dff52307fe}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Best Approximation Polynomial (BAP - BOB3).cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt">
+      <Filter>Source Files</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Eigen\Cholesky">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\CholmodSupport">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Core">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Dense">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Eigen">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Eigenvalues">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Geometry">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Householder">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\IterativeLinearSolvers">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Jacobi">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\KLUSupport">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\LU">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\MetisSupport">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\OrderingMethods">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\PardisoSupport">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\PaStiXSupport">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\QR">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\QtAlignedMalloc">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\Sparse">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\SparseCholesky">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\SparseCore">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\SparseLU">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\SparseQR">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\SPQRSupport">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\StdDeque">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\StdList">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\StdVector">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\SuperLUSupport">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\SVD">
+      <Filter>Eigen</Filter>
+    </None>
+    <None Include="Eigen\UmfPackSupport">
+      <Filter>Eigen</Filter>
+    </None>
+  </ItemGroup>
+</Project>
