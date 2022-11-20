@@ -8,55 +8,68 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 double f(double x) {
-	return pow(x - 1, 4) + pow(x - 3, 3) + pow(x - 2, 2);// +100 * sin(100 * x);
+	return pow(x - 1, 4) + pow(x - 3, 3) + pow(x - 2, 2) + 50 + 100 * sin(100 * x);
 	//return sin(x);
 }
 
 int main()
 {
-	double a = -2, b = 2;
+	double a = -2, b = 2; // начало и конец отрезка
 
-	const int K = 4; // количество конечных элементов
-	const int N = 4;
-	const int L = 160;
-	const int M_ = K * N; // количество базисных
+	const int K = 100; // количество конечных элементов
+	const int N = 6; // количество узлов на 1 конечном элементе
+	const int L = 40; // количество случайных точек
+	const int M_ = K * N; // количество базисных (склееных) функций
 
-	const int M = K * (N - 1) + 1; // количество узлов
-	double h = (b - a) / (M - 1);
+	const int M = K * (N - 1) + 1; // количество базисных (склееных) функций, оно же количество узлов
+	double h = (b - a) / (M - 1); // шаг по равномерной сетке
 
-	//double *mesh = new double [M];
-	std::vector<double> mesh(M);
+	double mesh[M]; // равномерная сетка по узлам
 	for (int i = 0; i < M; i++)
 	{
-		mesh[i] = a + i * h;
+		mesh[i] = a + i * h; // заполняем массив сетки
 	}
 	
-	const int Mviz = 1920;
-	double hviz = (b - a) / (Mviz - 1);
+	const int Mviz = 1920; // количество точек для отрисовки
+	double hviz = (b - a) / (Mviz - 1); // шаг для них
 	
-	//double *X = new double [Mviz];
-	//double *Approx = new double [Mviz];
-	std::vector<double> X(Mviz);
-	std::vector<double> Approx(Mviz);
+	double X[Mviz]; // массив точек для отрисовки
+	double Approx[Mviz]; // значение МНРП в этих точках
 	for(int iviz = 0; iviz < Mviz; iviz++)
 	{
-		X[iviz] = a + iviz * hviz;
+		X[iviz] = a + iviz * hviz; // заполнение массива точек для отрисовки
 	}
 	
 	///////////////////
 	// инициализация //
 	///////////////////
 
-	//double *D = new double[M_];
-	//double *random_mesh = new double[K * L]; 
-	std::vector<double> D(N);
-	std::vector<double> random_mesh(K*L);
-	for (int ki = 0; ki < K; ki++) 
+	double D[N]; // массив знаменателей
+				 // так как узлы на равномерной сетке
+				 // то на каждом конечном элементе
+				 // знаменатели будут повторяться
+				 // то есть на достаточно только
+				 // N знаменателей
+
+	double random_mesh[K * L]; // массив всех случайных точек для подсчета скалярного произведения
+							   // так как для нахождения МНРП нужно сначала решить СЛАУ
+							   // то нем придется хранить все точки сразу
+							   // 
+	// тут будем находить массив знаменателей
+	// и массив случайных чисел
+	for (int ki = 0; ki < K; ki++) // итерируемся ко конечным элементам
 	{
-		if (ki == 0)
+		// обозначения 
+		// ki - номер с 0 текущего конечного элемента
+		if (ki == 0) // знаменатели нужно вычислить только один раз
+					 // поставим такое условие
+					 // чтобы оно выполнилось 
+					 // только на первом конечном элементе
 		{
-			for (int i = 0; i < N; i++)
+			for (int i = 0; i < N; i++) // вычисление произведения П(xi - xj) по j
 			{
+				// mesh[ki * (N - 1) + i] - i-ая точка текущего конечного элемента
+
 				D[i] = 1;
 				for (int j = 0; j < N; j++)
 				{
@@ -66,70 +79,89 @@ int main()
 				}
 			}
 		}
-		for (int l = 0; l < L; l++)
+
+		for (int l = 0; l < L; l++) // заполнение равномерной сетки
 		{	
+			// обозначения 
+			// ki - номер с 0 текущего конечного элемента
+			// mesh[ki * (N - 1)] - начало текущего конечного элемента
+			// mesh[(ki + 1) * (N - 1)] - начало следующего конечного элемента
+			// random_mesh[ki * L + l] - l-ая случайная точка конечного элемента
 			random_mesh[ki * L + l] = mesh[ki * (N - 1)] + (mesh[(ki + 1) * (N - 1)] - mesh[ki * (N - 1)]) * double(rand()) / (RAND_MAX);
 		}
 	}
 
-	//for (int i = 0; i < M_; i++) {
-	//	//std::cout << D[i] << std::endl;
-	//}
-	//std::array<double, K* L> random_mesh_std;
-	//for (int i = 0; i < K * L; i++) {
-	//	random_mesh_std[i] = random_mesh[i];
-	//}
-	//std::sort(random_mesh_std.begin(), random_mesh_std.end());
-
-	//for (auto x : random_mesh_std)
-	//{
-	//	std::cout << x << std::endl;
-	//}
 
 	/////////////////////////
 	// Нахождение векторов //
 	/////////////////////////
+	
+	// G[i] - отвечает за i-ую функцию 
+	// их количество считаем по склееным, 
+	// поэтому всего их M
+	// G[i][l] - значение i-ой функции на l-ой случайной точке
+	// то есть G[i] - вектор значений функции на L случайных точках
+	// так как у нас есть склееные по границе конечных элементов функции
+	// то для G[i], где i % N - 1 == 0 (отвечает за склееные)
+	// у нас определено 2 конечных элементов
+	// тогда скалярный квадрат нужно считать по 2*L точкам
+	// а остальные скалярные произведения
+	// по пересекающимся конечным элементам
 
-	//double** G = new double* [M];
-	//double** F = new double* [M];
-	std::vector<std::vector<double>> G(M);
-	std::vector<std::vector<double>> F(M);
-	for (int i = 0; i < M; i++)
-	{
-		std::vector<double> tmp1(2 * L);
-		std::vector<double> tmp2(2 * L);
-		G[i] = tmp1;
-		F[i] = tmp2;
-		//G[i] = new double[2 * L];
-		//F[i] = new double[2 * L];
-	}
+	double G[M][2 * L]; 
+	double F[M][2 * L];
+		
+	for (int ki = 0; ki < K; ki++) // итерируемся по конечным элементам
+								   // можно рассмотреть пример
+								   // N = 4 K = 3
+								   // 0 0 0 * 0 0 * 0 0 0
+								   // 0 - функции определенные по одному узлу
+								   // * - функции определенные по двум узлам
+								   // то есть * граничные функции
+								   // в этом цикле будем считать значения всех функций
+								   // в случайных точках
 
-	for (int ki = 0; ki < K; ki++)
 	{
 		for (int i = 0; i < N; i++) 
 		{
-			if (i == N - 1 && ki != K - 1)
+			if (i == N - 1 && ki != K - 1) // условие попадания в * функцию, ведь она последняя в конечном элементе
 			{
 				for (int l = 0; l < L; l++)
-				{
-					G[ki * (N - 1) + i][l] = 1 / D[i];
-					G[ki * (N - 1) + i][l + L] = 1 / D[i];
-					F[ki * (N - 1) + i][l] = f(random_mesh[ki * L + l]);
-					F[ki * (N - 1) + i][l + L] = f(random_mesh[(ki + 1) * L + l]);
+				{	
+					G[ki * (N - 1) + i][l] = 1 / D[N - 1]; // значение функции на левом конечном элементе
+					G[ki * (N - 1) + i][l + L] = 1 / D[0]; // значение функции на правом конечном элементе
+
+					// (f,g) для правой части в СЛАУ
+					// так как функциия f не 0 на всем отрезке [a,b]
+					// но каждая g не 0 только на одном или двух конечных элементах
+					// то достаточно считать только на совпадающих конечных элементах
+
+					F[ki * (N - 1) + i][l] = f(random_mesh[ki * L + l]); // значение f на левом конечном элементе
+					F[ki * (N - 1) + i][l + L] = f(random_mesh[(ki + 1) * L + l]); // значение f на правом конечном элементе
+
 					for (int j = 0; j < N; j++)
 					{
-						if (i != j)
+						if (j != N - 1) // для левого конечного элемента функция построена на последнем узле этого элемента
 						{
 							G[ki * (N - 1) + i][l] *= (random_mesh[ki * L + l] - mesh[ki * (N - 1) + j]);
+							
+						}
+						if (j != 0) // для правого конечного элемента функция построена на первом узле этого элемента
+						{
 							G[ki * (N - 1) + i][l + L] *= (random_mesh[(ki + 1) * L + l] - mesh[(ki + 1) * (N - 1) + j]);
 						}
 					}
 				}
 			}
+			else if (i == 0 && ki != 0)
+			{
+				continue; // так как узловую функцию уже посчитали пропускаем эту итерацию
+			}
 			else
 			{
 				for (int l = 0; l < L; l++)
 				{
+					// аналогичго, но только для одного, внутреннего конечного элемента
 					G[ki * (N - 1) + i][l] = 1 / D[i];
 					F[ki * (N - 1) + i][l] = f(random_mesh[ki * L + l]);
 					for (int j = 0; j < N; j++)
@@ -148,95 +180,102 @@ int main()
 	// заполнение матрицы //
 	////////////////////////
 
-	std::vector<std::vector<double>> LAE(M);
-	std::vector<double> right(M);
-	for (int i = 0; i < M; i++)
-	{
-		std::vector<double> tmp1(M);
-		LAE[i] = tmp1;
-		//G[i] = new double[2 * L];
-		//F[i] = new double[2 * L];
-	}
-
 	MatrixXd LAE_ = MatrixXd::Zero(M, M);
 	VectorXd right_ = VectorXd::Zero(M);
 
+	// развивая тот пример выше 
+	// 0 0 0 * 0 0 * 0 0 0 - функции
+	// 0 1 2 3 4 5 6 7 8 9 - их номера
+	// тогда матрица будет выглядеть так
+	// (0,0) (0,1) (0,2) (0,3)   0     0     0     0     0     0 
+	// (1,0) (1,1) (1,2) (1,3)   0     0     0     0     0     0
+	// (2,0) (2,1) (2,2) (2,3)   0     0     0     0     0     0
+	// (3,0) (3,1) (3,2) (3,3) (3,4) (3,5) (3,6)   0     0     0
+	//   0     0     0   (4,3) (4,4) (4,5) (4,6)   0     0     0
+	//   0     0     0   (5,3) (5,4) (5,5) (5,6)   0     0     0 
+	//   0     0     0   (6,3) (6,4) (6,5) (6,6) (6,7) (6,8) (6,9)
+	//   0     0     0     0     0     0   (7,6) (7,7) (7,8) (7,9)
+	//   0     0     0     0     0     0   (8,6) (8,7) (8,8) (8,9)    
+	//   0     0     0     0     0     0   (9,6) (9,7) (9,8) (9,9)
+	// 
+	//
 
-	for (int ki = 0; ki < K; ki++) 
+	for (int ki = 0; ki < K; ki++) // итерации по конечным элементам
 	{
-		for (int i = 0; i < N; i++) 
+		for (int i = 0; i < N; i++) // итерируемся по функциям внутри каждого конечного элемента
 		{
-			double scalar_product_ii = 0;
-			double scalar_product_fi = 0;
-			for (int j = i+1; j < N; j++) 
+			double scalar_product_ii = 0; // (gi,gi) i в назывании роли не играет
+			double scalar_product_fi = 0; // (f,gi)
+
+			for (int j = i+1; j < N; j++) // сначала заполняем внедиагональные элементы
 			{
-				double scalar_product_ij = 0;
+				double scalar_product_ij = 0; // аналогично
+				
+				if (i == 0 && ki != 0)  // если функция узловая, то ее скалярное произведение будем считатать 
+										// только по второй части точек
+				{
+					for (int l = 0; l < L; l++)
+					{	// G[ki * (N - 1)][l + L] - узловая функция, вторая часть точек
+						scalar_product_ij += G[ki * (N - 1)][l + L] * G[ki * (N - 1) + j][l];
+					}
+				}
+				else // в противном случае считаем спокойно считаем по первым L точкам
+				{
+					for (int l = 0; l < L; l++)
+					{
+						scalar_product_ij += G[ki * (N - 1) + i][l] * G[ki * (N - 1) + j][l];
+					}
+				}
+				LAE_(ki * (N - 1) + i, ki * (N - 1) + j) = scalar_product_ij; // заносим это значение в матрицу
+				LAE_(ki * (N - 1) + j, ki * (N - 1) + i) = scalar_product_ij; // матрица Грама симметричная
+			}
+
+			// теперь строим диагональ
+			// если мы строго внутри конечного элемента, на самой первой функции или на самой последней
+			if ((i > 0 && i < N - 1) || (i == 0 && ki == 0) || (i == N - 1 && ki == K - 1)) 
+			{// то считаем считаем по первым L точкам
 				for (int l = 0; l < L; l++)
 				{
-					scalar_product_ij += G[ki * (N - 1) + i][l] * G[ki * (N - 1) + j][l];
+					scalar_product_ii += G[ki * (N - 1) + i][l] * G[ki * (N - 1) + i][l];
+					scalar_product_fi += G[ki * (N - 1) + i][l] * F[ki * (N - 1) + i][l];
 				}
-				LAE_(ki * (N - 1) + i, ki * (N - 1) + j) = scalar_product_ij;
-				LAE_(ki * (N - 1) + j, ki * (N - 1) + i) = scalar_product_ij;
 			}
+			else 
+			// если мы в конце конечного элемента, не являющимся последним
+			// то считаем по 2 * L точкам
 			if (i == N - 1 && ki != K - 1)
 			{
 				for (int l = 0; l < L; l++)
 				{
-					scalar_product_ii += G[ki * (N - 1) + i][l] * G[ki * (N - 1) + i][l];
+					scalar_product_ii += G[ki * (N - 1) + i][l] * G[ki * (N - 1) + i][l]; 
 					scalar_product_ii += G[ki * (N - 1) + i][L + l] * G[ki * (N - 1) + i][L + l];
-					scalar_product_fi += G[ki * (N - 1) + i][l] * f(random_mesh[ki * L + l]);
-					scalar_product_fi += G[ki * (N - 1) + i][L + l] * f(random_mesh[(ki + 1) * L + l]);
+					scalar_product_fi += G[ki * (N - 1) + i][l] * F[ki * (N - 1) + i][l];
+					scalar_product_fi += G[ki * (N - 1) + i][L + l] * F[ki * (N - 1) + i][L + l];
 				}
 			}
-			else if (i!=0 || ki==0)
-			{
-				for (int l = 0; l < L; l++) 
-				{
-					scalar_product_ii += G[ki * (N - 1) + i][l] * G[ki * (N - 1) + i][l];
-					scalar_product_fi += G[ki * (N - 1) + i][l] * f(random_mesh[ki * L + l]);
-				}
-			}
-			else if (i == 0 && ki != 0) 
+			else if (i == 0 && ki != 0) // тк уже посчитали скалярный квадрат граничной функции на предыдущем элементе, то пропускаем
 			{
 				continue;
 			}
-			if (i == N - 1 && ki != K - 1) 
-			{
-				LAE_(ki * (N - 1) + i, ki * (N - 1) + i) = scalar_product_ii;
-				right_(ki * (N - 1) + i) = scalar_product_fi;
-			}
-			else {
+			else
 
-				LAE_(ki* (N - 1) + i, ki* (N - 1) + i) = scalar_product_ii;
-				right_(ki* (N - 1) + i) = scalar_product_fi;
-			}
-
-			LAE[ki * (N - 1) + i][ki * (N - 1) + i] = scalar_product_ii;
-			right[ki * (N - 1) + i] = scalar_product_fi;
+			LAE_(ki * (N - 1) + i, ki * (N - 1) + i) = scalar_product_ii; // заносим значение в матрицу
+			right_(ki* (N - 1) + i) = scalar_product_fi; // и в правую часть СЛАУ
 		}
 	}
 
-	std::cout << LAE_ << std::endl;
+	VectorXd c = LAE_.colPivHouseholderQr().solve(right_); // решаем СЛАУ
 
-
-	VectorXd c = LAE_.colPivHouseholderQr().solve(right_);
-
-	std::cout << right_ << std::endl;
-	std::cout << c << std::endl;
-
-	for (int iviz = 0, ki = 0; iviz < Mviz; iviz++)
+	for (int iviz = 0, ki = 0; iviz < Mviz; iviz++) // находим аппроксимацию в точках для отображения
 	{
-		if (iviz == Mviz - 1) {
-			ki = K - 1;
-		}
-		else if (X[iviz] >= mesh[(ki + 1) * (N - 1)])
+		if (X[iviz] > mesh[(ki + 1) * (N - 1)]) // теперь итерации по всем точкам, поэтому нужно следить за текущим конечным элементом
 		{
 			ki++;
 		}
-		Approx[iviz] = 0;
-		for (int i = 0; i < N; i++)
+		Approx[iviz] = 0; // инициализируем сумму нулем
+		for (int i = 0; i < N; i++) 
 		{
-			double gviz = 1 / D[i];
+			double gviz = 1 / D[i]; // считаем значение базисной функции в точке
 			for (int j = 0; j < N; j++) 
 			{
 				if (i != j)
@@ -244,7 +283,7 @@ int main()
 					gviz *= (X[iviz] - mesh[ki * (N - 1) + j]);
 				}
 			}
-			Approx[iviz] += c(ki * (N - 1) + i) * gviz;
+			Approx[iviz] += c(ki * (N - 1) + i) * gviz; // и умножаем на нужный множитель
 		}
 
 	}
@@ -285,24 +324,5 @@ int main()
 
 	std::system("python plot.py"); // эта команда вызывает командную строку и включает питоновскую часть задачи
 	
-	/*delete [] mesh;
-	mesh = nullptr;
-
-	delete [] X;
-	X = nullptr;
-
-	delete [] Approx;
-	Approx = nullptr;
-
-	for (int i = 0; i < M; i++)
-	{
-		delete[] G[i];
-		delete[] F[i];
-	}
-	delete[] G;
-	delete[] F;
-
-	delete [] random_mesh;
-	delete [] D;*/
 	return 0;
 }
