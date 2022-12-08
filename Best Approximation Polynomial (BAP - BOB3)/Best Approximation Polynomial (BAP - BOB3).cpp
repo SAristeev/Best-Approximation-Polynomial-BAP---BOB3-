@@ -402,8 +402,8 @@ int main()
 		fprintf(meshFile,"%f, ", mesh[i]);
 		fprintf(FmeshFile, "%f, ", f(mesh[i]));
 	}
-	fprintf(meshFile, "%f, ", mesh[M - 1]);
-	fprintf(FmeshFile, "%f, ", f(mesh[M - 1]));
+	fprintf(meshFile, "%f\n", mesh[M - 1]);
+	fprintf(FmeshFile, "%f\n", f(mesh[M - 1]));
 	fclose(meshFile);
 	fclose(FmeshFile);
 
@@ -417,9 +417,9 @@ int main()
 		fprintf(FFile,"%f, ", f(X[i]));
 		fprintf(ApproxFile, "%f, ", Approx[i]);
 	}
-	fprintf(XFile, "%f, ", X[Mviz - 1]);
-	fprintf(FFile, "%f, ", f(X[Mviz - 1]));
-	fprintf(ApproxFile, "%f, ", Approx[Mviz - 1]);
+	fprintf(XFile, "%f\n", X[Mviz - 1]);
+	fprintf(FFile, "%f\n", f(X[Mviz - 1]));
+	fprintf(ApproxFile, "%f\n", Approx[Mviz - 1]);
 	fclose(XFile);
 	fclose(ApproxFile);
 	fclose(FFile);
@@ -433,8 +433,8 @@ int main()
 		fprintf(KFile, "%f, ", mesh[ki * (N - 1)]);
 		fprintf(KFFile, "%f, ", f(mesh[ki * (N - 1)]));
 	}
-	fprintf(KFile, "%f, ", mesh[M - 1]);
-	fprintf(KFFile, "%f, ", f(mesh[M - 1]));
+	fprintf(KFile, "%f\n", mesh[M - 1]);
+	fprintf(KFFile, "%f\n", f(mesh[M - 1]));
 	fclose(KFile);
 	fclose(KFFile);
 
