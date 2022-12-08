@@ -1,15 +1,14 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <vector>
+#define _CRT_SECURE_NO_WARNINGS // для fopen в visual studio
+#include <cmath>
+#include <cstdio>
 #include <Dense>
 
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-double f(double x) {
-	//return pow(x - 1, 4) + pow(x - 3, 3) + pow(x - 2, 2) + 50 + 100 * sin(100 * x);
+double f(double x) 
+{
 	return sin(x);
 }
 
@@ -376,91 +375,68 @@ int main()
 	////////////////////
 
 
-	std::ofstream ResudialFile; // файл параметров - в нем a,b и все нормы
-	ResudialFile.open("Resudial.txt");
-	ResudialFile << std::setiosflags(std::ios_base::scientific);
-	ResudialFile << "|----------------|--------------|--------------|--------------|" << std::endl;
-	ResudialFile << "|      mesh      |    ||*||1    |    ||*||2    |   ||*||inf   |" << std::endl;
-	ResudialFile << "|----------------|--------------|--------------|--------------|" << std::endl;
-	
-	ResudialFile << "|  h / 100 | abs | "
-				 << e1 << " | " 
-				 << e2 << " | "		
-				 << einf << " |" << std::endl;
-	ResudialFile << "|----------|-----|--------------|--------------|--------------|" << std::endl;
+	FILE* ResudialFile; // файл погрешностей - создает txt файл с таблицей
+	ResudialFile = fopen("Resudial.txt", "w");
 
-	ResudialFile << "|          | rel | "
-				 << e1 / f1 << " | " 
-				 << e2 / f2 << " | " 
-				 << einf / finf << " |" << std::endl;
-	ResudialFile << "|----------|-----|--------------|--------------|--------------|" << std::endl;
+	fprintf(ResudialFile, "|----------------|----------------|----------------|----------------|\n");
+	fprintf(ResudialFile, "|      mesh      |     ||*||1     |     ||*||2     |    ||*||inf    |\n");
+	fprintf(ResudialFile, "|----------------|----------------|----------------|----------------|\n");
+	fprintf(ResudialFile, "|  h / 100 | abs | %14.8e | %14.8e | %14.8e |\n", e1, e2, einf);
+	fprintf(ResudialFile, "|          | rel | %14.8e | %14.8e | %14.8e |\n", e1 / f1, e2 / f2, einf / finf);
+	fprintf(ResudialFile, "|----------|-----|----------------|----------------|----------------|\n");
+	fprintf(ResudialFile, "|  random  | abs | %14.8e | %14.8e | %14.8e |\n", er1, er2, erinf);
+	fprintf(ResudialFile, "|          | rel | %14.8e | %14.8e | %14.8e |\n", er1 / fr1, er2 / fr2, erinf / frinf);
+	fprintf(ResudialFile, "|----------|-----|----------------|----------------|----------------|\n");
+	fclose(ResudialFile);
 
-	ResudialFile << "|  random  | abs | "
-				 << er1 << " | " 
-				 << er2 << " | " 
-				 << erinf << " |" << std::endl;
-	ResudialFile << "|----------|-----|--------------|--------------|--------------|" << std::endl;
+	FILE *ParamsFile; // файл параметров - в нем a,b и все нормы
+	ParamsFile = fopen("Params.txt","w");
+	fprintf(ParamsFile, "%f, %f", a, b);
+	fclose(ParamsFile);
 
-	ResudialFile << "|          | rel | "
-				 << er1 / fr1 << " | " 
-				 << er2 / fr2 << " | "
-				 << erinf / frinf << " |" << std::endl;
-	ResudialFile.close();
-	
-
-	std::ofstream ParamsFile; // файл параметров - в нем a,b и все нормы
-	ParamsFile.open("Params.txt");
-	ParamsFile << a << ", " << b << ", "
-		<< e1 << ", " << e2 << ", " << einf << ", "
-		<< e1 / f1 << ", " << e2 / f2 << ", " << einf / finf << ", "
-		<< er1 << ", " << er2 << ", " << erinf << ", "
-		<< er1 / fr1 << ", " << er2 / fr2 << ", " << erinf / frinf << ", "
-		<< std::endl;
-	ParamsFile.close();
-
-	std::ofstream meshFile, FmeshFile; // файлы точек интерполяции и значения функции в этих точках - для выделения красным
-	meshFile.open("mesh.txt");
-	FmeshFile.open("Fmesh.txt");
+	FILE *meshFile, *FmeshFile; // файлы точек интерполяции и значения функции в этих точках - для выделения красным
+	meshFile = fopen("mesh.txt","w");
+	FmeshFile = fopen("Fmesh.txt","w");
 	for (int i = 0; i < M - 1; i++) 
 	{
-		meshFile << mesh[i] << ", ";
-		FmeshFile << f(mesh[i]) << ", ";
+		fprintf(meshFile,"%f, ", mesh[i]);
+		fprintf(FmeshFile, "%f, ", f(mesh[i]));
 	}
-	meshFile << mesh[M - 1] << std::endl;
-	FmeshFile << f(mesh[M - 1]) << std::endl;
-	meshFile.close();
-	FmeshFile.close();
+	fprintf(meshFile, "%f, ", mesh[M - 1]);
+	fprintf(FmeshFile, "%f, ", f(mesh[M - 1]));
+	fclose(meshFile);
+	fclose(FmeshFile);
 
-	std::ofstream XFile, ApproxFile, FFile; // файлы точек построения графиков
-	XFile.open("X.txt"); // Точки X
-	ApproxFile.open("Approx.txt"); // Значения полинома Лагранжа в этих точках
-	FFile.open("F.txt"); // Значения функции в этих точках
+	FILE *XFile, *ApproxFile, *FFile; // файлы точек построения графиков
+	XFile = fopen("X.txt", "w"); // Точки X
+	ApproxFile = fopen("Approx.txt", "w"); // Значения полинома Лагранжа в этих точках
+	FFile = fopen("F.txt","w"); // Значения функции в этих точках
 	for (int i = 0; i < Mviz - 1; i++) 
 	{
-		XFile << X[i] << ", ";
-		FFile << f(X[i]) << ", ";
-		ApproxFile << Approx[i] << ", ";
+		fprintf(XFile, "%f, ", X[i]);
+		fprintf(FFile,"%f, ", f(X[i]));
+		fprintf(ApproxFile, "%f, ", Approx[i]);
 	}
-	XFile << X[Mviz - 1] << std::endl;
-	FFile << f(X[Mviz - 1]) << std::endl;
-	ApproxFile << Approx[Mviz - 1] << std::endl;
-	XFile.close();
-	ApproxFile.close();
-	FFile.close();
+	fprintf(XFile, "%f, ", X[Mviz - 1]);
+	fprintf(FFile, "%f, ", f(X[Mviz - 1]));
+	fprintf(ApproxFile, "%f, ", Approx[Mviz - 1]);
+	fclose(XFile);
+	fclose(ApproxFile);
+	fclose(FFile);
 
 
-	std::ofstream KFile, KFFile;
-	KFile.open("K.txt"); // Значения функции в этих точках
-	KFFile.open("KF.txt"); // Значения функции в этих точках
+	FILE *KFile, *KFFile;
+	KFile = fopen("K.txt", "w"); // Значения функции в этих точках
+	KFFile = fopen("KF.txt", "w"); // Значения функции в этих точках
 	for (int ki = 0; ki < K - 1; ki++) 
 	{
-		KFile << mesh[ki * (N - 1)] << ", ";
-		KFFile << f(mesh[ki * (N - 1)]) << ", ";
+		fprintf(KFile, "%f, ", mesh[ki * (N - 1)]);
+		fprintf(KFFile, "%f, ", f(mesh[ki * (N - 1)]));
 	}
-	KFile << mesh[M - 1] << std::endl;
-	KFFile << f(mesh[M - 1]) << std::endl;
-	KFile.close();
-	KFFile.close();
+	fprintf(KFile, "%f, ", mesh[M - 1]);
+	fprintf(KFFile, "%f, ", f(mesh[M - 1]));
+	fclose(KFile);
+	fclose(KFFile);
 
 
 	std::system("python plot.py"); // эта команда вызывает командную строку и включает питоновскую часть задачи

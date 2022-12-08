@@ -131,9 +131,6 @@
     <ClCompile Include="Best Approximation Polynomial (BAP - BOB3).cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Eigen\Cholesky" />
     <None Include="Eigen\CholmodSupport" />
     <None Include="Eigen\Core" />
